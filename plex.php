@@ -31,7 +31,7 @@ class Plex {
 	private $uuid;
 	private $client;
 	/**
-	 * @var WorkFlows 
+	 * @var WorkFlows
 	 */
 	private $workflow;
 	public $debug = false;
@@ -56,7 +56,7 @@ class Plex {
 		$this->uuid = exec("defaults read ".self::PLIST." serverUUID");
 		$this->client = exec("defaults read ".self::PLIST." client");
 
-		$this->host = "http://".$this->server.":".$this->port;
+		$this->host = "https://".$this->server.":".$this->port;
 
 		if (!$this->server || !$this->port || !$this->uuid) {
 			$this->workflow->result(null, null, "Not configured", "No server configuration was found. Please configure your server using the 'plex server' keyword.", "icon.png", "no");
@@ -77,14 +77,14 @@ class Plex {
 		// Default port number
 		if (!$port) { $port = 32400; }
 
-		$xml = $this->workflow->request("http://$server:$port/servers");
-		
+		$xml = $this->workflow->request("https://$server:$port/servers");
+
 		$use_errors = libxml_use_internal_errors(true);
 		$xml = simplexml_load_string( $xml );
 		libxml_clear_errors();
 		libxml_use_internal_errors($use_errors);
 		if (!$xml) {
-			return "ERROR: Invalid response from http://$server:$port";
+			return "ERROR: Invalid response from https://$server:$port";
 		}
 
 		foreach( $xml->Server as $srv ) {
@@ -97,7 +97,7 @@ class Plex {
 		}
 
 		if ($uuid === NULL) {
-			return "ERROR: No Plex server was found at http://$server:$port";
+			return "ERROR: No Plex server was found at https://$server:$port";
 		} else {
 			exec("defaults write ".self::PLIST." server '$server'");
 			exec("defaults write ".self::PLIST." port '$port'");
@@ -120,7 +120,7 @@ class Plex {
 			$this->workflow->result( $server['name'], $server['address'], $server['name'], $server['address'], 'icon.png' );
 		}
 		$this->workflow->result( 'plex:web', 'web', 'Web', 'Plex server web client', 'icon.png' );
-		
+
 		return $this->workflow->toxml();
 	}
 
@@ -240,10 +240,10 @@ class Plex {
      */
 	public function browse( $context = null ) {
 		if (!$this->configured()) { return $this->workflow->toxml(); }
-	
+
 		$BASE_CONTEXT = "/library/sections";
 		if (!$context || strpos( $context, '/') !== 0) { $context = $BASE_CONTEXT; }
-		
+
 		if ($this->debug) { echo "Browsing at context '$context'\n"; }
 		$url = $this->host."$context";
 
@@ -257,11 +257,11 @@ class Plex {
 		if ( $directoryCount > 0 ) {
 			if ( $context != $BASE_CONTEXT ) {
 				switch( $sections['viewGroup'] ):
-					case "season": 
-						$back = $BASE_CONTEXT."/".$sections['librarySectionID']."/all"; 
+					case "season":
+						$back = $BASE_CONTEXT."/".$sections['librarySectionID']."/all";
 						continue;
-					case "secondary": 
-						$back = $BASE_CONTEXT; 
+					case "secondary":
+						$back = $BASE_CONTEXT;
 						continue;
 					default: {
 						$back = explode( "/", $context );
@@ -299,9 +299,9 @@ class Plex {
 			if ( $context != $BASE_CONTEXT ) {
 				$back = explode( '/', $context );
 
-				if ( end($back) == 'unwatched' || 
-						end($back) == 'newest' || 
-						end($back) == 'recentlyAdded' || 
+				if ( end($back) == 'unwatched' ||
+						end($back) == 'newest' ||
+						end($back) == 'recentlyAdded' ||
 						end($back) == 'recentlyViewed' ||
 						end($back) == 'onDeck' ) {
 					$back = explode( '/', $context );
